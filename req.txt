@@ -1,0 +1,6 @@
+re
+requests
+sys
+argparse
+urllib
+termcolor
