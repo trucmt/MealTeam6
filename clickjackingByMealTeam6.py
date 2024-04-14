@@ -41,9 +41,40 @@ try:
                 vuln = True
             
             frame_buster = re.search(r'<script>(.*)if\(top \!= self\)\s*{', response.text, re.DOTALL | re.IGNORECASE)
+            pattern_onbeforeunload = r'<script>\s*window\.onbeforeunload[^<]*</script>.*?<iframe src="([^"]+)"'
+            match_pattern_onbeforeunload = re.search(pattern_onbeforeunload, response.text, re.IGNORECASE | re.DOTALL)
+            pattern_location= r'<script>\s*var\s+location\s*=\s*[^;]+;\s*</script>.*?<iframe src="([^"]+)"'
+            match_pattern_location= re.search(pattern_location, response.text, re.IGNORECASE | re.DOTALL)
+            pattern_location_1=r'<script>\s*window\.defineSetter\("location",\s*function\(\)\s*{}\);\s*</script>.*?<iframe src="([^"]+)">'
+            match_pattern_location_1= re.search(pattern_location, response.text, re.IGNORECASE | re.DOTALL)
             x_frame_options = response.headers.get('X-Frame-Options', '')
             content_security_policy = response.headers.get('Content-Security-Policy', '')
+            
+            desired_domain= t
+            if match_pattern_onbeforeunload:
+               iframe_src = match_pattern_onbeforeunload.group(1)  # Lấy giá trị của src
+               if iframe_src.startswith(desired_domain):
+                print("The iframe src matches the desired domain and is linked to the onbeforeunload script.")
+               else:
+                print("The iframe src does not match the desired domain but is linked to the onbeforeunload script.")
+                vuln= True
+            
+            if match_pattern_location:
+               iframe_src = match_pattern_location.group(1)  # Lấy giá trị của src
+               if iframe_src.startswith(desired_domain):
+                print("The iframe src matches the desired domain and is linked to the location script.")
+               else:
+                print("The iframe src does not match the desired domain but is linked to the location script.")
+                vuln= True
 
+            if match_pattern_location_1:
+               iframe_src = match_pattern_location_1.group(1)  # Lấy giá trị của src
+               if iframe_src.startswith(desired_domain):
+                print("The iframe src matches the desired domain and is linked to the location 1 script.")
+               else:
+                print("The iframe src does not match the desired domain but is linked to the location 1 script.")
+                vuln= True    
+ 
             if content_security_policy:
                csp_policies = content_security_policy.split(';')
                frame_ancestors_content = frame_ancestors.group(1)
